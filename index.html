@@ -22,7 +22,11 @@
 		<script src="js/ConvexGeometry.js"></script>
 		<script src="js/stats.min.js"></script>
 
+		<script src="fonts/helvetiker_bold.typeface.js"></script>
+		<script src="fonts/helvetiker_regular.typeface.js"></script>
+		
 		<script src="js/d3.v3.min.js"></script>
+
 
 		<script>
 
@@ -59,20 +63,20 @@
 					
 					d3.json("http://localhost/livre-postnum/public/trombinoscope/json", function(error, dataIma) {
 
-						for (i = 0; i < dataIma.length; i++) { 
-							//for (i = 0; i < 1; i++) { 
-								addExa(dataCoor[i], 10, 1, dataIma[i].url);
-								addExa(dataIma[i].login, dataCoor[i]);
+						for (i = 0; i < dataIma.length; i++) { 							
+						//for (i = 0; i < 1; i++) { 
+								addExa(dataCoor[i], 30, 1, dataIma[i].url);
+								addTexte(dataIma[i].login, dataCoor[i]);
 							};
 							
-							//addFullerene(data, 1, {x:0,y:0,z:0});
+							//addFullerene(dataCoor, 1, {x:0,y:0,z:0});
 						
 					});
 
 					dataCoor.forEach(function(d){
-						d.x = parseInt(d.x);
-						d.y = parseInt(d.y);
-						d.z = parseInt(d.z);
+						d.x = parseFloat(d.x);
+						d.y = parseFloat(d.y);
+						d.z = parseFloat(d.z);
 						});					
 					
 				});
@@ -166,15 +170,15 @@
 				object = new THREE.Mesh( new THREE.SphereGeometry(75, 20, 20), mat );
 				object.position.set( p.x, p.y, p.z );
 				object.scale.set( s, s, s );
-				scene.add( object );
+				//scene.add( object );
 				
 			}
 			
 			function addTexte(txt, p){
-				var textGeo = new THREE.TextGeometry( txt);
+				var textGeo = new THREE.TextGeometry( txt,{size:1, height:1, font: 'helvetiker', "normal": 0});
 
-				//textGeo.computeBoundingBox();
-				//textGeo.computeVertexNormals();
+				textGeo.computeBoundingBox();
+				textGeo.computeVertexNormals();
 				textMesh = new THREE.Mesh( textGeo );
 				textMesh.position.x = p.x;
 				textMesh.position.y = p.y;
