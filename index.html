@@ -17,10 +17,12 @@
 	<body>
 
 		<script src="js/three.min.js"></script>
-
 		<script src="js/Detector.js"></script>
 		<script src="js/OrbitControls.js"></script>
+		<script src="js/ConvexGeometry.js"></script>
 		<script src="js/stats.min.js"></script>
+
+		<script src="js/d3.v3.min.js"></script>
 
 		<script>
 
@@ -37,7 +39,7 @@
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.y = 20;
 				camera.position.z = 200;
 
@@ -49,36 +51,138 @@
 
 				var light;
 				scene.add( new THREE.AmbientLight( 0x404040 ) );
-				/*
-				light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( 0, 1, 0 );
-				scene.add( light );				
-				*/
 				
-				var material = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'img/papi-CreaTIC.png' ), side: THREE.DoubleSide, transparent: true });
+				helper();
 				
-				var rectIma = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100, 4, 4 ), material );
-				rectIma.position.set(0, 0, 0 );
-				scene.add( rectIma );
+				d3.csv("data/3d_coor.csv", function(error, dataCoor) {
+					
+					
+					d3.json("http://localhost/livre-postnum/public/trombinoscope/json", function(error, dataIma) {
+
+						for (i = 0; i < dataIma.length; i++) { 
+							//for (i = 0; i < 1; i++) { 
+								addExa(dataCoor[i], 10, 1, dataIma[i].url);
+								addExa(dataIma[i].login, dataCoor[i]);
+							};
+							
+							//addFullerene(data, 1, {x:0,y:0,z:0});
+						
+					});
+
+					dataCoor.forEach(function(d){
+						d.x = parseInt(d.x);
+						d.y = parseInt(d.y);
+						d.z = parseInt(d.z);
+						});					
+					
+				});
+
 				
 				
-			    var a = 160 / 2, 
-		        b = (Math.sqrt(3) * a) / 2,
-		        x = 0,
-		        y = 0,
-		        z = 0;
-				var exaShape = new THREE.Shape();
-				exaShape.moveTo( x - a / 2, y - b );
-				exaShape.lineTo( x - a, y );
-				exaShape.lineTo( x - a / 2, y + b );
-				exaShape.lineTo( x + a / 2, y + b );
-				exaShape.lineTo( x + a, y );
-				exaShape.lineTo( x + a / 2, y - b );
+				//paramétrage du rendu de la scène
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				//ajout des événements
+				window.addEventListener( 'resize', onWindowResize, false );
+				
+				//rendu de la scène
+				animate();
+			}	
+				
+			function addExa(p, r, s, url){
+				
+				var materialIma = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( url ), side: THREE.DoubleSide, transparent: true });				
+				
+				var rectIma = new THREE.Mesh( new THREE.PlaneGeometry( r*0.5, r*0.5), materialIma );
+				rectIma.position.set(p.x, p.y, p.z );
+				rectIma.scale.set( s, s, s );
+				scene.add( rectIma );				
+				
 				material = new THREE.LineBasicMaterial( { linewidth: 10, color: 0x333333, transparent: true } );
-				var line = new THREE.Line( exaShape.createPointsGeometry(), material);
-				line.position.set( x, y, z );
-				scene.add( line );				
+				var line;
+				//creation des lignes par algo
+				var a = r / 2, 
+		        b = (Math.sqrt(3) * a) / 2;
+				var exaShape = new THREE.Shape();
+				exaShape.moveTo( - a / 2,  - b );
+				exaShape.lineTo( - a, 0 );
+				exaShape.lineTo( - a / 2,  b );
+				exaShape.lineTo(  a / 2,  b );
+				exaShape.lineTo(  a, 0 );
+				exaShape.lineTo(  a / 2,  - b );	
 				
+				line = new THREE.Line( exaShape.createPointsGeometry(), material);
+				line.position.set( p.x, p.y, p.z );
+				line.scale.set( s, s, s );
+				scene.add( line );
+				
+				/*
+				var geometry = new THREE.Geometry();
+			    geometry.vertices.push(new THREE.Vector3(0.023,   -0.07494,   -3.55242));
+			    geometry.vertices.push(new THREE.Vector3(-1.34628,   0.32285,   -3.27364));
+			    geometry.vertices.push(new THREE.Vector3(-2.23068,   -0.58428,   -2.70132));
+			    geometry.vertices.push(new THREE.Vector3(-1.78597,   -1.93008,   -2.3821));
+			    geometry.vertices.push(new THREE.Vector3(-0.47591,   -2.31071,   -2.64897));
+			    geometry.vertices.push(new THREE.Vector3(0.44851,   -1.36265,   -3.24697));
+			    geometry.vertices.push(new THREE.Vector3(0.023,   -0.07494,   -3.55242));
+			    				
+				line = new THREE.Line( geometry, material);
+				line.position.set( x, y, z );
+				line.scale.set( trans, trans, trans );
+				scene.add( line );
+				*/
+			}
+			
+			function addFullerene(data, s, p){
+
+				//var map = THREE.ImageUtils.loadTexture( 'img/UV_Grid_Sm.jpg' );
+				var map = THREE.ImageUtils.loadTexture( 'img/papi-CreaTIC.png' );
+				//map.wrapS = map.wrapT = THREE.RepeatWrapping;
+				//map.anisotropy = 16;
+				
+				var mat = new THREE.MeshLambertMaterial( { map: map } );
+				mat.transparent = true;
+				mat.side = THREE.DoubleSide;
+				//mat.blending = THREE[ "NoBlending" ];
+				//new THREE.MeshLambertMaterial( {map: map , side: THREE.DoubleSide, transparent: true} ),
+				//new THREE.MeshBasicMaterial( { color: 0xffffff, transparent: true, opacity: 0 } )
+				var materials = [
+				    mat,
+				    new THREE.MeshBasicMaterial( { wireframe: true } )
+				];
+				var points = [];
+				data.forEach(function(d){
+						points.push(new THREE.Vector3(d.x, d.y, d.z));
+					});
+
+				var object = THREE.SceneUtils.createMultiMaterialObject( new THREE.ConvexGeometry( points ), materials );
+				object.position.set( p.x, p.y, p.z );
+				object.scale.set( s, s, s );
+				scene.add( object );		
+				
+				object = new THREE.Mesh( new THREE.SphereGeometry(75, 20, 20), mat );
+				object.position.set( p.x, p.y, p.z );
+				object.scale.set( s, s, s );
+				scene.add( object );
+				
+			}
+			
+			function addTexte(txt, p){
+				var textGeo = new THREE.TextGeometry( txt);
+
+				//textGeo.computeBoundingBox();
+				//textGeo.computeVertexNormals();
+				textMesh = new THREE.Mesh( textGeo );
+				textMesh.position.x = p.x;
+				textMesh.position.y = p.y;
+				textMesh.position.z = p.z;
+				scene.add( textMesh );
+			}
+			
+			function helper(){
 				//ajout des aides graphiques
 				var help = new THREE.AxisHelper( 50 );
 				help.position.set( 100, 100, 100 );
@@ -94,18 +198,7 @@
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
-				
-				//paramétrage du rendu de la scène
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				container.appendChild( renderer.domElement );
-
-				//ajout des événements
-				window.addEventListener( 'resize', onWindowResize, false );
-				
-				//rendu de la scène
-				animate();
+				container.appendChild( stats.domElement );				
 			}
 
 			function onWindowResize() {
@@ -130,9 +223,9 @@
 			function render() {
 
 				renderer.render( scene, camera );
-				stats.update();
+				if(stats)stats.update();
 			}
-
+		
 		</script>
 
 	</body>

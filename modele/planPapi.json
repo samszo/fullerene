@@ -1,0 +1,52 @@
+{
+	"metadata": {
+		"version": 4.3,
+		"type": "Object",
+		"generator": "ObjectExporter"
+	},
+	"materials": [
+		{
+			"uuid": "7D82FE9A-67F9-48E5-A0AC-680C79CAE54A",
+			"type": "SpriteMaterial",
+			"color": 16777215
+		},
+		{
+			"uuid": "B5603661-C974-45F9-AB20-13D6E0C792F2",
+			"type": "MeshBasicMaterial",
+			"color": 16777215,
+			"blending": 5,
+			"side": 2,
+			"transparent": true
+		}],
+	"geometries": [
+		{
+			"uuid": "B115D4A5-9D7B-40DD-B296-1C407812E5A9",
+			"type": "PlaneGeometry",
+			"width": 200,
+			"height": 200,
+			"widthSegments": 1,
+			"heightSegments": 1
+		}],
+	"object": {
+		"uuid": "A0B275AB-E581-4050-B02B-C35B39EC25CB",
+		"type": "Scene",
+		"name": "Scene",
+		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+		"children": [
+			{
+				"uuid": "D6B25F04-DEE8-4C50-B782-6C99073C0442",
+				"type": "Sprite",
+				"name": "Sprite 1",
+				"material": "7D82FE9A-67F9-48E5-A0AC-680C79CAE54A",
+				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,-97.32624816894531,-39.10853576660156,-27.759151458740234,1]
+			},
+			{
+				"uuid": "2D11678D-25A6-49FD-9483-235F865CD61F",
+				"type": "Mesh",
+				"name": "Plane 2",
+				"geometry": "B115D4A5-9D7B-40DD-B296-1C407812E5A9",
+				"material": "B5603661-C974-45F9-AB20-13D6E0C792F2",
+				"matrix": [0.9680569767951965,-0.0943201333284378,0.2323131114244461,0,0.23801420629024506,0.6370210647583008,-0.7331803441047668,0,-0.07883468270301819,0.7650541663169861,0.6391222476959229,0,-95.09950256347656,8.411203384399414,40.741783142089844,1]
+			}]
+	}
+}
