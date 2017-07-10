@@ -36,6 +36,8 @@
 
 			var camera, controls, scene, renderer;
 
+			var arrPlans = [];
+			
 			init();
 			
 			function init() {
@@ -63,13 +65,35 @@
 					
 					d3.json("http://localhost/livre-postnum/public/trombinoscope/json", function(error, dataIma) {
 
-						for (i = 0; i < dataIma.length; i++) { 							
-						//for (i = 0; i < 1; i++) { 
-								addExa(dataCoor[i], 30, 1, dataIma[i].url);
-								addTexte(dataIma[i].login, dataCoor[i]);
-							};
-							
-							//addFullerene(dataCoor, 1, {x:0,y:0,z:0});
+						/*
+						for (i = 0; i < dataCoor.length; i++) { 							
+						//for (i = 0; i < 1; i++) {
+								if(i < dataIma.length){
+									addExa(dataCoor[i], 20, 1, dataIma[i].url);
+									addTexte(i+" "+dataIma[i].login, dataCoor[i]);
+								}else{
+									addExa(dataCoor[i], 20, 1, 'img/papi-CreaTIC.png');
+									addTexte(i, dataCoor[i]);
+								}
+						};
+						*/
+						addFullerene(dataCoor, 10, {x:0,y:0,z:0});
+						var points = [], prevPlan="", idPlan;
+						var i = 1;
+						arrPlans.forEach(function(d){
+							if(d.plan!=""){
+								idPlan = d.plan.split('-')[0];
+								if(prevPlan != idPlan && prevPlan != ""){
+									//if(i==32)
+										addFullerene(points, 1, {x:0,y:0,z:0});
+									points = [];
+									i++;
+								}
+								prevPlan = d.plan.split('-')[0];
+								points.push(d);
+							}
+						});
+						if(points.length)addFullerene(points, 1, {x:0,y:0,z:0});
 						
 					});
 
@@ -77,7 +101,28 @@
 						d.x = parseFloat(d.x);
 						d.y = parseFloat(d.y);
 						d.z = parseFloat(d.z);
-						});					
+						
+						arrPlans.push({"id":d.id,"plan":d.Plan1,"x":d.x,"y":d.y,"z":d.z});
+						arrPlans.push({"id":d.id,"plan":d.Plan2,"x":d.x,"y":d.y,"z":d.z});
+						arrPlans.push({"id":d.id,"plan":d.Plan3,"x":d.x,"y":d.y,"z":d.z});
+						/*
+						var c;
+						if(d.Plan1){
+							c = d.Plan1.split("-");
+							arrPlans.push({"type":c[0],"num":c[1],"ordre":c[2],"x":d.x,"y":d.y,"z":d.z});
+						}
+						if(d.Plan2){
+							c = d.Plan2.split("-");
+							arrPlans.push({"type":c[0],"num":c[1],"ordre":c[2],"x":d.x,"y":d.y,"z":d.z});
+						}
+						if(d.Plan3){
+							c = d.Plan3.split("-");
+							arrPlans.push({"type":c[0],"num":c[1],"ordre":c[2],"x":d.x,"y":d.y,"z":d.z});
+						}
+						*/
+					});				
+					arrPlans.sort(by('plan'));
+					var t = 1;
 					
 				});
 
@@ -142,12 +187,13 @@
 			
 			function addFullerene(data, s, p){
 
+
 				//var map = THREE.ImageUtils.loadTexture( 'img/UV_Grid_Sm.jpg' );
 				var map = THREE.ImageUtils.loadTexture( 'img/papi-CreaTIC.png' );
 				//map.wrapS = map.wrapT = THREE.RepeatWrapping;
 				//map.anisotropy = 16;
 				
-				var mat = new THREE.MeshLambertMaterial( { map: map } );
+				var mat = new THREE.MeshBasicMaterial( { map: map } );
 				mat.transparent = true;
 				mat.side = THREE.DoubleSide;
 				//mat.blending = THREE[ "NoBlending" ];
@@ -157,35 +203,62 @@
 				    mat,
 				    new THREE.MeshBasicMaterial( { wireframe: true } )
 				];
+				//ajoute la liste de points
 				var points = [];
-				data.forEach(function(d){
-						points.push(new THREE.Vector3(d.x, d.y, d.z));
+				var pointsCenter = [];
+				data.forEach(function(d, i){
+						//if(d.Plan1=="" && d.Plan2=="" && d.Plan3==""){
+							points.push(new THREE.Vector3(d.x, d.y, d.z));
+							//if(d.id && d.plan)addTexte(d.id+" "+d.plan, d);
+							//if(d.id)addTexte(d.id, d);
+						//}
+						if(i<6)pointsCenter.push(new THREE.Vector3(d.x, d.y, d.z));
 					});
-
-				var object = THREE.SceneUtils.createMultiMaterialObject( new THREE.ConvexGeometry( points ), materials );
-				object.position.set( p.x, p.y, p.z );
-				object.scale.set( s, s, s );
+				//création de la geometry multipoint
+				var g = new THREE.ConvexGeometry( points );
+				var object = THREE.SceneUtils.createMultiMaterialObject( g, materials );
+				//object.position.set( p.x, p.y, p.z );
+				//object.scale.set( s, s, s );
 				scene.add( object );		
 				
+				//calcule le centre de l'objet
+				var c = THREE.GeometryUtils.center(pointsCenter[0],pointsCenter[2],pointsCenter[5]);				
+				if(data[0].plan)addTexte(data[0].plan, c);
+				//
+				
+				/*
 				object = new THREE.Mesh( new THREE.SphereGeometry(75, 20, 20), mat );
 				object.position.set( p.x, p.y, p.z );
 				object.scale.set( s, s, s );
-				//scene.add( object );
-				
+				scene.add( object );
+				*/
 			}
 			
 			function addTexte(txt, p){
-				var textGeo = new THREE.TextGeometry( txt,{size:1, height:1, font: 'helvetiker', "normal": 0});
-
+								
+				var textGeo = new THREE.TextGeometry( txt,{
+					font: 'helvetiker',
+					height:1,
+					size:6,
+					hover:4,
+					curveSegments:1,
+					//bevelThickness:2,
+					//bevelSize:1.5,
+					//bevelSegments:3,
+					//bevelEnabled:true,
+					weight:"normal", 
+					style:"normal"					
+					});
+				var material = new THREE.MeshPhongMaterial( { color: 0xFF0011, shading: THREE.FlatShading } );
 				textGeo.computeBoundingBox();
 				textGeo.computeVertexNormals();
-				textMesh = new THREE.Mesh( textGeo );
+				textMesh = new THREE.Mesh( textGeo, material );
 				textMesh.position.x = p.x;
 				textMesh.position.y = p.y;
 				textMesh.position.z = p.z;
 				scene.add( textMesh );
 			}
-			
+						
 			function helper(){
 				//ajout des aides graphiques
 				var help = new THREE.AxisHelper( 50 );
@@ -229,7 +302,27 @@
 				renderer.render( scene, camera );
 				if(stats)stats.update();
 			}
-		
+			var by = function (name) {
+			    return function (o, p) {
+			        var a, b;
+			        if (typeof o === 'object' && typeof p === 'object' && o && p) {
+			            a = o[name];
+			            b = p[name];
+			            if (a === b) {
+							return 0; 
+						}
+				        if (typeof a === typeof b) {
+				        		return a < b ? -1 : 1;
+						}
+				        return typeof a < typeof b ? -1 : 1;
+				    } else {
+				            throw {
+				                name: 'Error',
+				                message: 'Expected an object when sorting by ' + name
+				            };
+					} 
+			   };
+			};		
 		</script>
 
 	</body>
